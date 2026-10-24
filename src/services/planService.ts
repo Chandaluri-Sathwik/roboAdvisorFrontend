@@ -12,15 +12,7 @@ export type RemotePortfolioState = Pick<PlanProfile, 'actualAllocation' | 'portf
 
 export async function syncPlan(profile: PlanProfile): Promise<RemotePlanIds> {
   const userId = await ensureDemoUser(profile)
-  await apiRequest(`/users/${userId}/profile`, {
-    method: 'PUT',
-    body: JSON.stringify({
-      monthly_income: profile.income,
-      monthly_expenses: profile.expenses,
-      emergency_fund: profile.emergencyFund,
-      monthly_debt_payment: 0,
-    }),
-  })
+  await apiRequest(`/users/${userId}/profile`, { method: 'PUT', body: JSON.stringify({}) })
 
   const risk = await apiRequest<RiskResponse>(`/users/${userId}/risk-assessments`, {
     method: 'POST',
@@ -32,8 +24,8 @@ export async function syncPlan(profile: PlanProfile): Promise<RemotePlanIds> {
   })
 
   const goalPayload = {
-    name: 'Wealth creation',
-    goal_type: 'wealth_creation',
+    name: profile.goalType === 'other' ? profile.customGoalName : goalLabel(profile.goalType),
+    goal_type: profile.goalType,
     target_amount: profile.goal,
     horizon_years: profile.years,
     initial_investment: profile.initial,
@@ -57,6 +49,16 @@ export async function syncPlan(profile: PlanProfile): Promise<RemotePlanIds> {
     actualAllocation: portfolio.actual_allocation,
     portfolioValue: portfolio.current_value,
   }
+}
+
+function goalLabel(goalType: string): string {
+  const labels: Record<string, string> = {
+    wealth_creation: 'Wealth creation',
+    home: 'Buy a home',
+    education: 'Education',
+    retirement: 'Retirement',
+  }
+  return labels[goalType] || 'Investment goal'
 }
 
 export async function simulateMarket(portfolioId: string): Promise<RemotePortfolioState> {

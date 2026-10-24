@@ -2,14 +2,15 @@ import type { Allocation, RiskProfile } from '../data/demo'
 
 export type PlanProfile = {
   name: string
-  income: number
-  expenses: number
-  emergencyFund: number
   goal: number
+  goalType: string
+  customGoalName: string
   years: number
   initial: number
   sip: number
+  investmentType: '' | 'one_time' | 'monthly' | 'both'
   willingness: number
+  expectedReturnRange: '' | '4_6' | '7_10' | '11_15' | 'over_15'
   capacity: number
   horizon: number
   riskProfile: RiskProfile

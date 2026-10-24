@@ -1,0 +1,196 @@
+For your basic robo-advisor, the four investment options — stocks, mutual funds, commodities, and bonds/debt — are a reasonable starting universe.
+
+The important part is that your questionnaire should tell the backend three things:
+1. How much money can the user invest?
+2. How much risk can they tolerate?
+3. What are they investing for, and when will they need the money?
+You don't need a huge questionnaire. I'd start with around 7–9 required inputs, plus a few optional ones.
+1. Recommended user input fields
+
+1. Investment amount
+Required
+Ask how much money the user wants to invest.
+
+Example: ₹10,000, ₹50,000, ₹1,00,000.
+
+Also ask whether it is a one-time investment or a recurring monthly investment (SIP-style).
+
+
+
+
+2. Investment horizon
+Required
+How long can the user leave the money invested?
+
+Suggested choices:
+- Less than 1 year
+- 1–3 years
+- 3–5 years
+- 5–10 years
+- More than 10 years
+This is important because stocks and commodities can fluctuate significantly over short periods.
+
+
+
+
+3. Risk tolerance
+Required
+Ask how comfortable the user is with losses or fluctuations.
+
+Suggested choices:
+- Low — I prefer stability.
+- Moderate — I can accept some fluctuations.
+- High — I can tolerate significant fluctuations for potentially higher returns.
+This can be used to classify users into conservative, moderate and aggressive profiles.
+
+
+
+
+4. Financial goal
+Required
+Ask what the user wants to achieve.
+
+Choices: wealth creation, buying a house, education, retirement, or a custom goal.
+
+If they have a specific goal, ask for the target amount and the approximate date they need it.
+
+
+
+
+5. Ability to absorb losses
+Required
+Ask how financially manageable a temporary loss would be.
+
+Example choices:
+- I cannot afford to lose any of this money.
+- I could manage a small loss.
+- I could manage a moderate loss.
+- I can afford a substantial loss.
+This is different from risk tolerance: someone may be comfortable with risk but unable to afford a loss.
+
+
+
+
+6. Emergency savings and liquidity needs
+Required
+Ask whether the user has emergency savings and whether they'll need to withdraw this investment soon.
+
+Example: “Will you need any of this money within the next 12 months?”
+
+Money needed soon should not automatically be allocated to volatile investments.
+
+
+
+
+7. Investment experience
+Recommended
+Ask whether the user is a beginner, has some experience, or invests regularly.
+
+This helps you explain the recommended portfolio appropriately, although experience alone shouldn't determine risk capacity.
+
+
+
+
+8. Existing investments
+Optional
+Ask whether the user already has investments in stocks, mutual funds, bonds or other assets.
+
+This helps avoid recommending a portfolio that unintentionally concentrates their overall wealth in one asset class.
+
+
+
+2. Should you ask the user for their expected return?
+I'd make this optional, rather than a required field.
+
+For example, you could ask for a desired annual return, but a target return is not a guarantee. If someone selects a very high return while having a low risk tolerance and a short investment horizon, your backend should flag the mismatch instead of simply constructing a risky portfolio.
+
+A better approach is to calculate the portfolio's estimated historical return and risk from the stored data, then compare those estimates with the user's goal.
+3. Example of the final questionnaire
+Here's a simplified version of how the form could look in your React frontend.
+Investment profile
+Prototype questionnaire — sample inputs only.
+How much do you want to invest? (₹)
+
+Investment type
+One-time investment
+
+Monthly investment
+
+
+Investment horizon
+Less than 1 year
+
+1–3 years
+
+3–5 years
+
+5–10 years
+
+More than 10 years
+
+
+Risk tolerance
+Low — prioritize stability
+
+Moderate — accept some fluctuations
+
+High — accept significant fluctuations
+
+
+Primary financial goal
+Long-term wealth creation
+
+Buying a house
+
+Education
+
+Retirement
+
+Other
+
+
+What level of loss could you financially manage?
+None
+
+A small loss
+
+A moderate loss
+
+A substantial loss
+
+
+Do you have emergency savings separate from this investment?
+Yes
+
+No
+
+Not sure
+
+
+Will you need to withdraw this money within 12 months?
+Yes
+
+No
+
+Not sure
+
+
+Use these sample inputs
+4. How these inputs will affect portfolio recommendations
+Your backend can translate the answers into constraints and then calculate a suggested allocation across your four investment categories.
+User profile	Likely portfolio behavior
+Conservative, short horizon	Emphasize suitable debt instruments; limit volatile assets
+Moderate, medium horizon	Balance suitable debt, mutual funds and equities
+Aggressive, long horizon	Allow greater equity exposure, subject to loss capacity
+Needs money soon	Prioritize liquidity and capital preservation; avoid unsuitable long-term or volatile investments
+
+These are general design principles, not fixed allocation percentages. Commodities should usually be a limited, diversified component rather than a default large allocation. Also, don't assume that every bond or debt instrument is low-risk: credit quality, duration, liquidity and interest-rate changes matter.
+
+My recommendation for your project: start with inputs 1–6 as required, add investment experience as recommended, and make existing investments optional. Avoid asking for age, salary, PAN, bank details or other personal data unless you have a specific, justified need for them.
+
+Once these fields are fixed, we can define the backend request schema and the rules that turn the answers into a portfolio recommendation.
+
+If you want, I can:
+- Help design the backend input schema based on the sample questionnaire values
+- Explain how to convert questionnaire answers into portfolio allocation rules
+- Describe how to handle mismatched risk tolerance and return

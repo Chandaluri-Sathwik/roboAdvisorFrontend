@@ -7,15 +7,16 @@ type AppContextValue = {
   syncStatus: SyncStatus
   syncError: string | null
   setProfile: (update: Partial<PlanProfile>) => void
-  savePlan: () => Promise<boolean>
+  savePlan: (profileToSave?: PlanProfile) => Promise<boolean>
   simulateMarketMove: () => Promise<void>
   applyPortfolioRebalance: () => Promise<void>
   resetDemo: () => void
 }
 
 const initialProfile: PlanProfile = {
-  name: '', income: 0, expenses: 0, emergencyFund: 0, goal: 0, years: 1, initial: 0, sip: 0,
-  willingness: 0, capacity: 0, horizon: 0, riskProfile: 'Conservative',
+  name: '', goal: 0, goalType: '', customGoalName: '', years: 0,
+  initial: 0, sip: 0, investmentType: '', willingness: -1, expectedReturnRange: '',
+  capacity: 0, horizon: 0, riskProfile: 'Conservative',
   targetAllocation: { equity: 0, debt: 0, gold: 0, cash: 0 },
   actualAllocation: { equity: 0, debt: 0, gold: 0, cash: 0 }, portfolioValue: 0,
   hasSimulatedMarket: false,
@@ -43,11 +44,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setProfileState((current) => ({ ...current, ...update }))
   }
 
-  const savePlan = async () => {
+  const savePlan = async (profileToSave = profile) => {
     setSyncStatus('syncing')
     setSyncError(null)
     try {
-      const remotePlan = await saveRemotePlan(profile)
+      const remotePlan = await saveRemotePlan(profileToSave)
       setProfileState((current) => ({ ...current, ...remotePlan }))
       setSyncStatus('synced')
       return true
