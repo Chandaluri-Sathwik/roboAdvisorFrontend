@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { sendAssistantMessage, type AssistantMessage } from '../services/assistantService'
 import { generateLocalAssistantReply, type LocalAssistantResponse } from '../services/localAssistantService'
-import { FormattedMessage } from './FormattedMessage'
 import { useApp } from '../store/AppContext'
 
 export function Assistant() {
@@ -114,7 +113,7 @@ export function Assistant() {
           ? 'Gemini mode sends your saved portfolio context to the backend Gemini API. If the model or API is unavailable, I fall back to local portfolio explanations.'
           : 'I run locally in your browser and explain the portfolio details saved in this app. I do not use Gemini or live market data in local mode.'} Ask about your allocation, risk profile, contribution split, saved candidates, projection, or rebalance simulation.</div>}
         {messages.map((item, index) => <div key={`${item.role}-${index}`} ref={item.role === 'assistant' && index === messages.length - 1 ? latestAssistantRef : undefined} className={`bot-bubble ${item.role === 'assistant' ? 'answer' : 'user-message'}`}>
-          {item.role === 'assistant' ? <FormattedMessage text={item.text} /> : item.text}
+          {item.text}
           {item.role === 'assistant' && item.action?.type === 'confirm_rebalance' && <button className="chat-action" onClick={() => confirmRebalance(index)} disabled={isLoading}>Confirm local rebalance simulation</button>}
           {item.role === 'assistant' && <small>{item.provider === 'gemini'
             ? 'Gemini-generated explanation grounded in your saved portfolio context. Educational only, not investment advice.'
