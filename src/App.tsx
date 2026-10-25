@@ -1,8 +1,8 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from './components/AppLayout'
 import { DashboardPage } from './pages/DashboardPage'
+import { DataNotesPage } from './pages/DataNotesPage'
 import { GoalPlannerPage } from './pages/GoalPlannerPage'
-import { InsightsPage } from './pages/InsightsPage'
 import { LandingPage } from './pages/LandingPage'
 import { OnboardingPage } from './pages/OnboardingPage'
 import { PortfolioPage } from './pages/PortfolioPage'
@@ -21,7 +21,7 @@ export default function App() {
       <Route path="/goals/:goalId" element={<GoalPlannerPage />} />
       <Route path="/portfolio" element={<PortfolioPage />} />
       <Route path="/portfolio/rebalance" element={<RebalancePage />} />
-      <Route path="/insights" element={<InsightsPage />} />
+      <Route path="/data-notes" element={<DataNotesPage />} />
     </Route>
     <Route path="*" element={<Navigate to="/" replace />} />
   </Routes>

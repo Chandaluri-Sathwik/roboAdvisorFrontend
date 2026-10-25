@@ -8,24 +8,24 @@ export function LandingPage() {
   return <div className="landing">
     <nav className="landing-nav">
       <div className="brand"><span>✦</span>FinGuide</div>
-      <div className="landing-links"><a href="#how">How it works</a><a href="#principles">Our principles</a><Button variant="secondary" onClick={() => navigate('/onboarding')}>Build my plan →</Button></div>
+      <div className="landing-links"><a href="#principles">Our principles</a><Button variant="secondary" onClick={() => navigate('/onboarding')}>Build my plan →</Button></div>
     </nav>
     <section className="hero">
       <div className="hero-copy">
-        <p className="pill">● A NEW WAY TO INVEST WITH CLARITY</p>
-        <h1>Your financial future,<br /><em>made clearer.</em></h1>
-        <p className="hero-text">A thoughtful, goal-based investing experience that adapts to your life — not the other way around.</p>
-        <div className="hero-actions"><Button onClick={() => navigate('/onboarding')}>Build my investment plan <span>→</span></Button><button className="text-button" onClick={() => document.getElementById('how')?.scrollIntoView({ behavior: 'smooth' })}>See how it works <b>↓</b></button></div>
-        <p className="hero-note">✦ Educational simulation · No real investments or money movement</p>
+        <p className="pill">● EDUCATIONAL INVESTING PROTOTYPE</p>
+        <h1>Your financial future,<br /><em>explored with clarity.</em></h1>
+        <p className="hero-text">A goal-based investing demo that helps you explore a risk profile, sample allocations, and contribution ideas without implying a live recommendation.</p>
+        <div className="hero-actions"><Button onClick={() => navigate('/onboarding')}>Build my demo plan <span>→</span></Button><button className="text-button" onClick={() => document.getElementById('principles')?.scrollIntoView({ behavior: 'smooth' })}>Our principles <b>↓</b></button></div>
+        <p className="hero-note">✦ Educational simulation · Not a personalized recommendation or live investment action</p>
       </div>
       <div className="hero-art">
         <div className="orbit orbit-one" /><div className="orbit orbit-two" />
-        <div className="hero-card growth-card"><p>YOUR PLAN, AT A GLANCE</p><strong>₹50L</strong><span>Wealth goal · 10 years</span><div className="progress-track"><i /></div><small>24% on track</small></div>
-        <div className="hero-card allocation-card"><p>SMART ALLOCATION</p><div className="mini-donut"><AllocationDonut allocation={{ equity: 50, debt: 35, gold: 10, cash: 5 }} size={92} /></div><span>Built around you</span></div>
+        <div className="hero-card growth-card"><p>SAMPLE PLAN PREVIEW</p><strong>₹50L</strong><span>Example wealth goal · 10 years</span><div className="progress-track"><i /></div><small>Illustrative only</small></div>
+        <div className="hero-card allocation-card"><p>ILLUSTRATIVE MIX</p><div className="mini-donut"><AllocationDonut allocation={{ equity: 55, debt: 35, commodity: 10 }} size={92} /></div><span>Equity / Debt / Commodity example</span></div>
         <div className="floating-leaf">✦</div>
       </div>
     </section>
-    <section id="how" className="principles">
+    <section className="principles">
       <p className="eyebrow">INVESTING, MADE HUMAN</p><h2>A better way to build wealth</h2>
       <div id="principles" className="principle-grid">
         {[

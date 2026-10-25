@@ -1,10 +1,24 @@
 import { colors, labels, type Allocation } from '../data/demo'
+import { formatINR } from '../lib/finance'
 
-export function AllocationLegend({ allocation }: { allocation: Allocation }) {
+export function AllocationLegend({
+  allocation,
+  contributionAmount,
+  contributionLabel,
+}: {
+  allocation: Allocation
+  contributionAmount?: number
+  contributionLabel?: string
+}) {
   return <div className="allocation-list">
     {(Object.keys(allocation) as (keyof Allocation)[]).map((key) => <div className="allocation-row" key={key}>
       <span><i style={{ background: colors[key] }} />{labels[key]}</span>
-      <strong>{allocation[key]}%</strong>
+      <div className="allocation-row-values">
+        <strong>{allocation[key]}%</strong>
+        {contributionAmount !== undefined && <small>
+          {formatINR(contributionAmount * allocation[key] / 100)}{contributionLabel ? ` ${contributionLabel}` : ''}
+        </small>}
+      </div>
     </div>)}
   </div>
 }

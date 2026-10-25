@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AllocationDonut, AllocationLegend } from '../components/Allocation'
 import { Button } from '../components/Button'
@@ -10,28 +11,50 @@ function Metric({ label, value, sub }: { label: string; value: string; sub: stri
 }
 
 export function DashboardPage() {
-  const { profile, resetDemo, syncStatus, syncError } = useApp()
+  const { profile, resetDemo, savePlan, syncError, syncStatus } = useApp()
   const navigate = useNavigate()
-  const portfolioValue = profile.portfolioValue
+  const portfolioRefreshAttempted = useRef(false)
+
+  useEffect(() => {
+    if (!profile.goalId || !profile.investmentType || portfolioRefreshAttempted.current
+      || syncStatus === 'restoring' || syncStatus === 'syncing') return
+    if (Array.isArray(profile.investmentOptions?.illustrative_portfolios)) return
+    portfolioRefreshAttempted.current = true
+    void savePlan()
+  }, [profile.goalId, profile.investmentOptions, profile.investmentType, savePlan, syncStatus])
+
   const resetForNextPerson = () => {
+    const confirmed = window.confirm(
+      'Start a blank demo on this browser? This clears the browser copy. The saved MongoDB demo record is retained and is not deleted.',
+    )
+    if (!confirmed) return
     resetDemo()
     navigate('/onboarding')
   }
 
   return <>
-    <Topbar eyebrow={`GOOD MORNING, ${profile.name.toUpperCase()}`} title="Your plan is taking shape." action={<Button variant="secondary" onClick={resetForNextPerson}>Start for a new person</Button>} />
-    {syncStatus !== 'idle' && <p className={`sync-notice ${syncStatus}`}>{syncStatus === 'synced' ? '✓ Saved to the API and PostgreSQL.' : syncStatus === 'syncing' ? 'Saving your plan…' : syncError}</p>}
+    <Topbar eyebrow={`DEMO PLAN OVERVIEW · ${profile.name.toUpperCase()}`} title="Illustrative plan summary" action={<Button variant="secondary" onClick={resetForNextPerson}>Start a new demo</Button>} />
+    {syncStatus === 'syncing' && <p className="sync-note" role="status">Refreshing your saved plan to generate portfolio examples…</p>}
+    {syncStatus === 'offline' && syncError && <p className="form-error" role="alert">{syncError}</p>}
     <section className="dashboard-grid">
       <div className="dashboard-primary">
-        <div className="hero-metric card"><div><p className="eyebrow">TOTAL PORTFOLIO VALUE</p><h2>{formatINR(portfolioValue)}</h2><span className="positive">Current simulated value <small>from your portfolio API</small></span></div><div className="chart-bars">{Array.from({ length: 8 }, (_, index) => <i key={index} style={{ height: `${35 + index * 7}%` }} />)}</div></div>
-        <div className="metric-grid"><Metric label="YOUR WEALTH GOAL" value={formatINR(profile.goal, true)} sub={`${profile.years} years remaining`} /><Metric label="MONTHLY CONTRIBUTION" value={formatINR(profile.sip)} sub="Next SIP: 1 September" /><Metric label="GOAL PROGRESS" value="24%" sub="You’re building momentum" /></div>
+        <div className="metric-grid"><Metric label="INVESTMENT HORIZON" value={`${profile.years} years`} sub={profile.goalType.replaceAll('_', ' ')} /><Metric label="EXPECTED RETURN ASSUMPTION" value={`${profile.expectedReturnPercent}%`} sub="Scenario input, not a promise" /><Metric label="TOTAL CONTRIBUTIONS" value={formatINR(profile.projection?.total_contributions ?? 0, true)} sub="Over the selected horizon" /></div>
         <div className="card goal-card"><div>
-          <p className="eyebrow">WEALTH CREATION</p><h3>{formatINR(profile.portfolioValue)} <span>of {formatINR(profile.goal)}</span></h3><div className="wide-progress"><i /></div><p>Your projection is calculated by the backend when you save this goal. <button onClick={() => navigate('/goals/demo')}>Explore scenarios →</button></p></div><div className="goal-mark">{profile.years}<br /><small>years</small></div></div>
+          <p className="eyebrow">{profile.goalType.replaceAll('_', ' ').toUpperCase() || 'YOUR PLAN'}</p><h3>{profile.riskProfile} risk profile</h3><p>Your plan uses a {profile.investmentType === 'one_time' ? 'one-time investment' : 'monthly contribution'} of {formatINR(profile.investmentType === 'one_time' ? profile.initial : profile.sip)}. <button onClick={() => navigate(`/goals/${profile.goalId ?? 'demo'}`)}>Adjust plan assumptions →</button></p></div><div className="goal-mark">{profile.years}<br /><small>years</small></div></div>
       </div>
       <aside className="dashboard-side">
-        <div className={`card alert-card ${profile.hasSimulatedMarket ? 'attention' : ''}`}><span>{profile.hasSimulatedMarket ? '!' : '✓'}</span><div><p className="eyebrow">{profile.hasSimulatedMarket ? 'ACTION TO REVIEW' : 'YOUR PLAN IS ON TRACK'}</p><h3>{profile.hasSimulatedMarket ? 'Your portfolio has drifted' : 'Everything is balanced'}</h3><p>{profile.hasSimulatedMarket ? 'Equity is above your target after the market simulation.' : 'Your current allocation remains close to its target mix.'}</p>{profile.hasSimulatedMarket && <button onClick={() => navigate('/portfolio/rebalance')}>Review rebalance →</button>}</div></div>
-        <div className="card allocation-card-full"><div className="card-title"><div><p className="eyebrow">CURRENT ALLOCATION</p><h3>Staying diversified</h3></div><button onClick={() => navigate('/portfolio')}>Details →</button></div><div className="allocation-visual compact"><AllocationDonut allocation={profile.actualAllocation} size={128} /><AllocationLegend allocation={profile.actualAllocation} /></div></div>
-        <div className="card next-card"><p className="eyebrow">UP NEXT</p><h3>Monthly contribution</h3><p><strong>{formatINR(profile.sip)}</strong> will be allocated on 1 Sep.</p><button onClick={() => navigate('/goals/demo')}>View contribution plan →</button></div>
+        <div className="card allocation-card-full">
+          <div className="card-title"><div><p className="eyebrow">CONTRIBUTION BREAKDOWN</p><h3>Where your money goes</h3></div></div>
+          <div className="allocation-visual compact">
+            <AllocationDonut allocation={profile.targetAllocation} size={128} />
+            <AllocationLegend
+              allocation={profile.targetAllocation}
+              contributionAmount={profile.investmentType === 'one_time' ? profile.initial : profile.sip}
+              contributionLabel={profile.investmentType === 'one_time' ? 'one-time' : '/ month'}
+            />
+          </div>
+        </div>
+        <div className="card next-card"><p className="eyebrow">CONTRIBUTION PLAN</p><h3>{profile.investmentType === 'one_time' ? 'One-time investment' : 'Monthly contribution'}</h3><p><strong>{formatINR(profile.investmentType === 'one_time' ? profile.initial : profile.sip)}</strong> is the input for this educational plan.</p><button onClick={() => navigate(`/goals/${profile.goalId ?? 'demo'}`)}>View contribution plan →</button></div>
       </aside>
     </section>
   </>
