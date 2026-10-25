@@ -33,7 +33,7 @@ export function Assistant() {
         try {
           // Gemini runs only through the backend, which keeps GEMINI_API_KEY
           // out of browser code. The server falls back locally on provider errors.
-          response = await sendAssistantMessage(profile.userId, prompt, messages.slice(-6))
+          response = await sendAssistantMessage(profile.userId, prompt, messages.slice(-6).map(({ role, text }) => ({ role, text: text.slice(-3000) })))
         } catch (requestError) {
           const local = generateLocalAssistantReply(prompt, profile)
           const reason = requestError instanceof Error ? requestError.message : 'The Gemini request failed.'
