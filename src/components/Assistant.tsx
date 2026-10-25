@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
+import { sendAssistantMessage, type AssistantMessage } from '../services/assistantService'
 import { generateLocalAssistantReply, type LocalAssistantResponse } from '../services/localAssistantService'
-import type { AssistantMessage } from '../services/assistantService'
 import { useApp } from '../store/AppContext'
 
 export function Assistant() {
@@ -10,6 +10,7 @@ export function Assistant() {
   const [messages, setMessages] = useState<AssistantMessage[]>([])
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const assistantMode = import.meta.env.VITE_ASSISTANT_MODE === 'gemini' ? 'gemini' : 'local'
 
   useEffect(() => {
     const openAssistant = () => setOpen(true)
@@ -26,16 +27,40 @@ export function Assistant() {
     setMessages((current) => [...current, { role: 'user', text: prompt }])
     setIsLoading(true)
     try {
-      // No HTTP request: the assistant derives its reply from the profile
-      // already in React state/localStorage, even if the API is offline.
-      const response: LocalAssistantResponse = generateLocalAssistantReply(prompt, profile)
+      let response: LocalAssistantResponse
+
+      if (assistantMode === 'gemini' && profile.userId) {
+        try {
+          // Gemini runs only through the backend, which keeps GEMINI_API_KEY
+          // out of browser code. The server falls back locally on provider errors.
+          response = await sendAssistantMessage(profile.userId, prompt, messages.slice(-6))
+        } catch (requestError) {
+          const local = generateLocalAssistantReply(prompt, profile)
+          const reason = requestError instanceof Error ? requestError.message : 'The Gemini request failed.'
+          response = {
+            ...local,
+            provider: 'local',
+            warning: `Gemini could not be reached. I answered from the saved portfolio locally instead. ${reason}`,
+          }
+        }
+      } else {
+        response = {
+          ...generateLocalAssistantReply(prompt, profile),
+          provider: 'local',
+          ...(assistantMode === 'gemini' ? {
+            warning: 'Save a complete plan first to send its portfolio context to Gemini. This answer was generated locally.',
+          } : {}),
+        }
+      }
+
       setMessages((current) => [...current, {
         role: 'assistant',
-        text: response.reply,
+        text: response.warning ? `${response.warning}\n\n${response.reply}` : response.reply,
         action: response.action,
+        provider: response.provider ?? 'local',
       }])
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'The local assistant could not answer this question.')
+      setError(requestError instanceof Error ? requestError.message : 'The assistant could not answer this question.')
     } finally {
       setIsLoading(false)
     }
@@ -60,15 +85,26 @@ export function Assistant() {
   return <>
     <button className="assistant-fab" onClick={() => setOpen(true)}><span>✦</span> Ask FinGuide</button>
     {open && <div className="chat-panel">
-      <div className="chat-head"><div><span className="chat-logo">AI</span><strong>FinGuide — Local Assistant</strong><small>Uses your saved portfolio · No Gemini/API request</small></div><button onClick={() => setOpen(false)} aria-label="Close assistant">×</button></div>
+      <div className="chat-head">
+        <div>
+          <span className="chat-logo">AI</span>
+          <strong>{assistantMode === 'gemini' ? 'FinGuide — Gemini mode' : 'FinGuide — Local Assistant'}</strong>
+          <small>{assistantMode === 'gemini' ? 'Gemini via backend · local fallback enabled' : 'Uses your saved portfolio · no model API request'}</small>
+        </div>
+        <button onClick={() => setOpen(false)} aria-label="Close assistant">×</button>
+      </div>
       <div className="chat-body">
-        {!messages.length && <div className="bot-bubble">Hi {profile.name}. I run locally in your browser and explain the portfolio details saved in this app. Ask about your allocation, risk profile, contribution split, saved candidates, projection, or rebalance simulation. I do not use Gemini or live market data.</div>}
+        {!messages.length && <div className="bot-bubble">Hi {profile.name}. {assistantMode === 'gemini'
+          ? 'Gemini mode sends your saved portfolio context to the backend Gemini API. If the model or API is unavailable, I fall back to local portfolio explanations.'
+          : 'I run locally in your browser and explain the portfolio details saved in this app. I do not use Gemini or live market data in local mode.'} Ask about your allocation, risk profile, contribution split, saved candidates, projection, or rebalance simulation.</div>}
         {messages.map((item, index) => <div key={`${item.role}-${index}`} className={`bot-bubble ${item.role === 'assistant' ? 'answer' : 'user-message'}`}>
           {item.text}
           {item.role === 'assistant' && item.action?.type === 'confirm_rebalance' && <button className="chat-action" onClick={() => confirmRebalance(index)} disabled={isLoading}>Confirm local rebalance simulation</button>}
-          {item.role === 'assistant' && <small>Educational portfolio explanation only. Not investment advice.</small>}
+          {item.role === 'assistant' && <small>{item.provider === 'gemini'
+            ? 'Gemini-generated explanation grounded in your saved portfolio context. Educational only, not investment advice.'
+            : 'Local portfolio explanation. Educational only, not investment advice.'}</small>}
         </div>)}
-        {isLoading && <div className="bot-bubble">Checking your saved portfolio…</div>}
+        {isLoading && <div className="bot-bubble">{assistantMode === 'gemini' ? 'Checking Gemini and your saved portfolio…' : 'Checking your saved portfolio…'}</div>}
         {error && <div className="form-error" role="alert">{error}</div>}
         <div className="chat-prompts">
           <button onClick={() => void ask('Explain my risk-based allocation')}>Why this allocation?</button>
