@@ -16,7 +16,7 @@ export function AppLayout() {
       <NavLink to="/" className="brand"><span>✦</span>FinGuide</NavLink>
       <p className="sidebar-label">WEALTH PLANNING</p>
       <nav>{navigation.map(([label, href, icon]) => <NavLink key={href} to={href} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><b>{icon}</b>{label}</NavLink>)}</nav>
-      <div className="sidebar-bottom"><button className="advisor-mini" onClick={() => window.dispatchEvent(new Event('finguide:open-assistant'))}><span>AI</span><div><strong>FinGuide AI</strong><small>Gemini educational guide</small></div></button><NavLink to="/" className="nav-item"><b>⌂</b>Home</NavLink></div>
+      <div className="sidebar-bottom"><button className="advisor-mini" onClick={() => window.dispatchEvent(new Event('finguide:open-assistant'))}><span>AI</span><div><strong>FinGuide Local</strong><small>Local portfolio assistant</small></div></button><NavLink to="/" className="nav-item"><b>⌂</b>Home</NavLink></div>
     </aside>
     <main className="main-content">
       {syncStatus !== 'idle' && <div className={`sync-notice ${syncStatus}`} role={syncStatus === 'offline' ? 'alert' : 'status'}>
