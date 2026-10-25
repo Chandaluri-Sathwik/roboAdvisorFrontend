@@ -23,5 +23,5 @@ export async function sendAssistantMessage(
   return apiRequest<AssistantResponse>('/assistant/messages', {
     method: 'POST',
     body: JSON.stringify({ user_id: userId, message, history }),
-  }, 11_000)
+  }, 17_000)
 }
