@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { sendAssistantMessage, type AssistantMessage } from '../services/assistantService'
+import { generateLocalAssistantReply, type LocalAssistantResponse } from '../services/localAssistantService'
+import type { AssistantMessage } from '../services/assistantService'
 import { useApp } from '../store/AppContext'
 
 export function Assistant() {
-  const { profile, applyPortfolioRebalance } = useApp()
+  const { profile, setProfile } = useApp()
   const [open, setOpen] = useState(false)
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState<AssistantMessage[]>([])
@@ -19,54 +20,55 @@ export function Assistant() {
   const ask = async (question: string) => {
     const prompt = question.trim()
     if (!prompt || isLoading) return
-    if (!profile.userId) {
-      setError('Save your plan before asking the assistant about it.')
-      return
-    }
 
     setMessage('')
     setError('')
     setMessages((current) => [...current, { role: 'user', text: prompt }])
     setIsLoading(true)
     try {
-      const response = await sendAssistantMessage(profile.userId, prompt, messages.slice(-6))
-      setMessages((current) => [...current, { role: 'assistant', text: response.reply, action: response.action }])
+      // No HTTP request: the assistant derives its reply from the profile
+      // already in React state/localStorage, even if the API is offline.
+      const response: LocalAssistantResponse = generateLocalAssistantReply(prompt, profile)
+      setMessages((current) => [...current, {
+        role: 'assistant',
+        text: response.reply,
+        action: response.action,
+      }])
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'The assistant could not answer right now.')
+      setError(requestError instanceof Error ? requestError.message : 'The local assistant could not answer this question.')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const confirmRebalance = async (messageIndex: number) => {
+  const confirmRebalance = (messageIndex: number) => {
     if (isLoading) return
     setError('')
-    setIsLoading(true)
-    try {
-      const applied = await applyPortfolioRebalance()
-      if (!applied) throw new Error('The rebalance simulation could not be applied.')
-      setMessages((current) => current.map((item, index) => index === messageIndex
-        ? { ...item, action: null, text: `${item.text}\n\nRebalance simulation applied. Your current simulated allocation now matches its saved target.` }
-        : item))
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'The rebalance simulation could not be applied.')
-    } finally {
-      setIsLoading(false)
-    }
+    setProfile({
+      actualAllocation: { ...profile.targetAllocation },
+      hasSimulatedMarket: false,
+    })
+    setMessages((current) => current.map((item, index) => index === messageIndex
+      ? {
+          ...item,
+          action: null,
+          text: `${item.text}\n\nLocal rebalance simulation applied in this browser. This change is saved only in browser storage; it is not synced to MongoDB and no real trades were placed.`,
+        }
+      : item))
   }
 
   return <>
-    <button className="assistant-fab" onClick={() => setOpen(true)}><span>✦</span> Ask FinGuide AI</button>
+    <button className="assistant-fab" onClick={() => setOpen(true)}><span>✦</span> Ask FinGuide</button>
     {open && <div className="chat-panel">
-      <div className="chat-head"><div><span className="chat-logo">AI</span><strong>FinGuide AI</strong><small>Portfolio details · Educational assistant</small></div><button onClick={() => setOpen(false)} aria-label="Close assistant">×</button></div>
+      <div className="chat-head"><div><span className="chat-logo">AI</span><strong>FinGuide — Local Assistant</strong><small>Uses your saved portfolio · No Gemini/API request</small></div><button onClick={() => setOpen(false)} aria-label="Close assistant">×</button></div>
       <div className="chat-body">
-        {!messages.length && <div className="bot-bubble">Hi {profile.name}. Ask about your saved allocation, risk profile, contribution split, portfolio candidates, projection, or rebalance simulation.</div>}
+        {!messages.length && <div className="bot-bubble">Hi {profile.name}. I run locally in your browser and explain the portfolio details saved in this app. Ask about your allocation, risk profile, contribution split, saved candidates, projection, or rebalance simulation. I do not use Gemini or live market data.</div>}
         {messages.map((item, index) => <div key={`${item.role}-${index}`} className={`bot-bubble ${item.role === 'assistant' ? 'answer' : 'user-message'}`}>
           {item.text}
-          {item.role === 'assistant' && item.action?.type === 'confirm_rebalance' && <button className="chat-action" onClick={() => void confirmRebalance(index)} disabled={isLoading}>Confirm rebalance simulation</button>}
-          {item.role === 'assistant' && <small>AI-generated educational information. Not investment advice.</small>}
+          {item.role === 'assistant' && item.action?.type === 'confirm_rebalance' && <button className="chat-action" onClick={() => confirmRebalance(index)} disabled={isLoading}>Confirm local rebalance simulation</button>}
+          {item.role === 'assistant' && <small>Educational portfolio explanation only. Not investment advice.</small>}
         </div>)}
-        {isLoading && <div className="bot-bubble">Thinking…</div>}
+        {isLoading && <div className="bot-bubble">Checking your saved portfolio…</div>}
         {error && <div className="form-error" role="alert">{error}</div>}
         <div className="chat-prompts">
           <button onClick={() => void ask('Explain my risk-based allocation')}>Why this allocation?</button>
