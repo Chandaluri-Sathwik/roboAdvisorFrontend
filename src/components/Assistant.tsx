@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { sendAssistantMessage, type AssistantMessage } from '../services/assistantService'
 import { generateLocalAssistantReply, type LocalAssistantResponse } from '../services/localAssistantService'
 import { FormattedMessage } from './FormattedMessage'
@@ -11,6 +11,8 @@ export function Assistant() {
   const [messages, setMessages] = useState<AssistantMessage[]>([])
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const chatBodyRef = useRef<HTMLDivElement | null>(null)
+  const latestAssistantRef = useRef<HTMLDivElement | null>(null)
   const assistantMode = import.meta.env.VITE_ASSISTANT_MODE === 'gemini' ? 'gemini' : 'local'
 
   useEffect(() => {
@@ -18,6 +20,19 @@ export function Assistant() {
     window.addEventListener('finguide:open-assistant', openAssistant)
     return () => window.removeEventListener('finguide:open-assistant', openAssistant)
   }, [])
+
+  useEffect(() => {
+    const body = chatBodyRef.current
+    const latestMessage = latestAssistantRef.current
+    if (!body || !latestMessage) return
+
+    // Start each new answer at its beginning instead of leaving the scroll
+    // position halfway through a long response.
+    const bodyTop = body.getBoundingClientRect().top
+    const messageTop = latestMessage.getBoundingClientRect().top
+    const nextScrollTop = body.scrollTop + messageTop - bodyTop - 8
+    body.scrollTo({ top: Math.max(0, nextScrollTop), behavior: 'auto' })
+  }, [messages])
 
   const ask = async (question: string) => {
     const prompt = question.trim()
@@ -94,11 +109,11 @@ export function Assistant() {
         </div>
         <button onClick={() => setOpen(false)} aria-label="Close assistant">×</button>
       </div>
-      <div className="chat-body">
+      <div className="chat-body" ref={chatBodyRef}>
         {!messages.length && <div className="bot-bubble">Hi {profile.name}. {assistantMode === 'gemini'
           ? 'Gemini mode sends your saved portfolio context to the backend Gemini API. If the model or API is unavailable, I fall back to local portfolio explanations.'
           : 'I run locally in your browser and explain the portfolio details saved in this app. I do not use Gemini or live market data in local mode.'} Ask about your allocation, risk profile, contribution split, saved candidates, projection, or rebalance simulation.</div>}
-        {messages.map((item, index) => <div key={`${item.role}-${index}`} className={`bot-bubble ${item.role === 'assistant' ? 'answer' : 'user-message'}`}>
+        {messages.map((item, index) => <div key={`${item.role}-${index}`} ref={item.role === 'assistant' && index === messages.length - 1 ? latestAssistantRef : undefined} className={`bot-bubble ${item.role === 'assistant' ? 'answer' : 'user-message'}`}>
           {item.role === 'assistant' ? <FormattedMessage text={item.text} /> : item.text}
           {item.role === 'assistant' && item.action?.type === 'confirm_rebalance' && <button className="chat-action" onClick={() => confirmRebalance(index)} disabled={isLoading}>Confirm local rebalance simulation</button>}
           {item.role === 'assistant' && <small>{item.provider === 'gemini'
