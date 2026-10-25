@@ -1,9 +1,8 @@
 import { apiRequest } from './apiClient'
 
 export type AssistantAction = { type: 'confirm_rebalance' } | null
-export type AssistantSource = { title: string; url: string }
-export type AssistantMessage = { role: 'user' | 'assistant'; text: string; action?: AssistantAction; sources?: AssistantSource[] }
-type AssistantResponse = { reply: string; action?: AssistantAction; sources?: AssistantSource[] }
+export type AssistantMessage = { role: 'user' | 'assistant'; text: string; action?: AssistantAction }
+type AssistantResponse = { reply: string; action?: AssistantAction }
 
 export async function sendAssistantMessage(
   userId: string,

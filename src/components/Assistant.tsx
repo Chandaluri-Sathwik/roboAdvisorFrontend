@@ -30,7 +30,7 @@ export function Assistant() {
     setIsLoading(true)
     try {
       const response = await sendAssistantMessage(profile.userId, prompt, messages.slice(-6))
-      setMessages((current) => [...current, { role: 'assistant', text: response.reply, action: response.action, sources: response.sources }])
+      setMessages((current) => [...current, { role: 'assistant', text: response.reply, action: response.action }])
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'The assistant could not answer right now.')
     } finally {
@@ -58,13 +58,12 @@ export function Assistant() {
   return <>
     <button className="assistant-fab" onClick={() => setOpen(true)}><span>✦</span> Ask FinGuide AI</button>
     {open && <div className="chat-panel">
-      <div className="chat-head"><div><span className="chat-logo">AI</span><strong>FinGuide AI</strong><small>Google Gemini · Educational assistant</small></div><button onClick={() => setOpen(false)} aria-label="Close assistant">×</button></div>
+      <div className="chat-head"><div><span className="chat-logo">AI</span><strong>FinGuide AI</strong><small>Portfolio details · Educational assistant</small></div><button onClick={() => setOpen(false)} aria-label="Close assistant">×</button></div>
       <div className="chat-body">
-        {!messages.length && <div className="bot-bubble">Hi {profile.name}. Ask freely about your saved allocation, candidates, projection, or the latest market news and possible asset-class effects.</div>}
+        {!messages.length && <div className="bot-bubble">Hi {profile.name}. Ask about your saved allocation, risk profile, contribution split, portfolio candidates, projection, or rebalance simulation.</div>}
         {messages.map((item, index) => <div key={`${item.role}-${index}`} className={`bot-bubble ${item.role === 'assistant' ? 'answer' : 'user-message'}`}>
           {item.text}
           {item.role === 'assistant' && item.action?.type === 'confirm_rebalance' && <button className="chat-action" onClick={() => void confirmRebalance(index)} disabled={isLoading}>Confirm rebalance simulation</button>}
-          {item.role === 'assistant' && item.sources?.length ? <div className="assistant-sources"><span>Sources</span>{item.sources.map((source) => <a href={source.url} target="_blank" rel="noreferrer" key={source.url}>{source.title}</a>)}</div> : null}
           {item.role === 'assistant' && <small>AI-generated educational information. Not investment advice.</small>}
         </div>)}
         {isLoading && <div className="bot-bubble">Thinking…</div>}
@@ -75,8 +74,6 @@ export function Assistant() {
           <button onClick={() => void ask('How is my contribution allocated across asset classes?')}>Explain contribution split</button>
           <button onClick={() => void ask('Explain my return-assumption projection')}>Explain my projection</button>
           <button onClick={() => void ask('What does rebalancing mean?')}>Why rebalance?</button>
-          <button onClick={() => void ask('What is the latest market news and how could it affect my portfolio asset classes?')}>Latest market news</button>
-          <button onClick={() => void ask('Oil prices suddenly rose. How could this affect my portfolio, and should I review its allocation?')}>Oil-price scenario</button>
           {profile.hasSimulatedMarket && <button onClick={() => void ask('Please rebalance my portfolio now')}>Rebalance simulation</button>}
         </div>
       </div>
