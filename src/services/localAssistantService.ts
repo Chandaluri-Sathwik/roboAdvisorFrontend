@@ -97,7 +97,7 @@ function explainContributions(profile: PlanProfile): string {
     const details = assetClasses
       .map((assetClass) => {
         const value = classAmounts[assetClass]?.[field]
-        return Number.isFinite(value) ? `${title(assetClass)} ${formatRupees(value)}` : null
+        return typeof value === 'number' && Number.isFinite(value) ? `${title(assetClass)} ${formatRupees(value)}` : null
       })
       .filter((value): value is string => Boolean(value))
     if (details.length) parts.push(`Saved class amounts: ${details.join(', ')}.`)
