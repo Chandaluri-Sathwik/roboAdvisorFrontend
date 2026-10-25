@@ -1,7 +1,7 @@
 import type { PlanProfile } from '../types/plan'
 
 export type LocalAssistantAction = { type: 'confirm_rebalance' } | null
-export type LocalAssistantResponse = { reply: string; action?: LocalAssistantAction }
+export type LocalAssistantResponse = { reply: string; action?: LocalAssistantAction; provider?: 'local' | 'gemini'; warning?: string }
 
 const rupees = new Intl.NumberFormat('en-IN', {
   style: 'currency',
