@@ -1,5 +1,7 @@
 import type { Allocation, RiskProfile, RiskTolerance } from '../data/demo'
 
+export type MarketChanges = Record<keyof Allocation, number>
+
 export type PlanProfile = {
   name: string
   goalType: string
@@ -35,6 +37,7 @@ export type MarketDataContext = {
 
 export type InvestmentOptions = {
   status: string
+  investment_type?: 'one_time' | 'monthly'
   generated_at: string
   classes_without_verified_candidates: Array<keyof Allocation>
   allocation: Allocation

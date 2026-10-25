@@ -53,6 +53,11 @@ export function RecommendationPage() {
         <div className="recommendation-section-heading">
           <div><p className="eyebrow">INVESTMENT CANDIDATES</p><h2>Explore options by asset class</h2></div>
         </div>
+        <p>
+          {profile.investmentType === 'monthly'
+            ? 'Monthly plans show mutual-fund candidates only. Confirm each scheme’s current SIP availability and minimum with the provider.'
+            : 'One-time plans show all currently verified investable candidates.'}
+        </p>
         <div className="candidate-class-grid">
           {assetClasses.map((assetClass) => {
             const amount = options?.class_amounts[assetClass]
@@ -70,9 +75,9 @@ export function RecommendationPage() {
                   <i style={{ background: colors[assetClass] }} />
                   <span>
                     <strong>{candidate.name}</strong>
-                    <small>{candidate.instrument_type === 'stock' ? `${candidate.exchange ?? 'Equity'} · ${candidate.symbol}` : `Mutual fund · Scheme ${candidate.scheme_code ?? candidate.symbol}`}</small>
+                    <small>{candidate.instrument_type === 'stock' ? `${candidate.exchange ?? 'Equity'} · ${candidate.symbol}` : 'Mutual fund'}</small>
                     {candidate.latest_observation && <small>
-                      {formatINR(candidate.latest_observation.value)} on {new Date(candidate.latest_observation.date).toLocaleDateString()} · {candidate.latest_observation.source}
+                      {formatINR(candidate.latest_observation.value)} on {new Date(candidate.latest_observation.date).toLocaleDateString()}
                     </small>}
                     {candidate.historical_return_1y_percent != null && <small>1-year observed change: {candidate.historical_return_1y_percent}%</small>}
                     {candidate.historical_risk_metrics && <small>

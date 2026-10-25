@@ -18,7 +18,7 @@ export function normalizeAllocation(allocation: LegacyAllocation): Allocation {
 }
 
 export const labels: Record<keyof Allocation, string> = {
-  equity: 'Equity', debt: 'Debt', commodity: 'Commodity (gold proxy)',
+  equity: 'Equity', debt: 'Debt', commodity: 'Commodity',
 }
 
 export const colors: Record<keyof Allocation, string> = {

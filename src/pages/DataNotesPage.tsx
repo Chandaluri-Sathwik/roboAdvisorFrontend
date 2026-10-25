@@ -29,6 +29,7 @@ const notes = [
   {
     title: 'Other market references',
     points: [
+      'Commodity-linked candidate schemes currently include Indian gold- and silver-linked mutual-fund NAVs. These are scheme observations, not MCX spot or futures prices; check each scheme’s details and current availability with its provider.',
       'RBI government-security yields are indicative references only. They do not identify a purchasable security and are not guaranteed returns or bond total returns.',
       'Commodity reference-price changes do not include futures roll yield, collateral returns, fees or INR currency effects. These references are not investable Indian portfolio holdings.',
       'All historical figures can differ materially from future results. They should not be used alone to make investment decisions.',

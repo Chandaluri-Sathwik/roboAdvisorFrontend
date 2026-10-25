@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { normalizeAllocation } from '../data/demo'
 import { applyRebalance, loadSavedPlan, simulateMarket, syncPlan as saveRemotePlan } from '../services/planService'
-import type { PlanProfile, SyncStatus } from '../types/plan'
+import type { MarketChanges, PlanProfile, SyncStatus } from '../types/plan'
 
 type AppContextValue = {
   profile: PlanProfile
@@ -10,7 +10,7 @@ type AppContextValue = {
   setProfile: (update: Partial<PlanProfile>) => void
   savePlan: (profileToSave?: PlanProfile) => Promise<boolean>
   restorePlan: () => Promise<boolean>
-  simulateMarketMove: () => Promise<boolean>
+  simulateMarketMove: (changes: MarketChanges) => Promise<boolean>
   applyPortfolioRebalance: () => Promise<boolean>
   resetDemo: () => void
 }
@@ -101,13 +101,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const simulateMarketMove = async () => {
+  const simulateMarketMove = async (changes: MarketChanges) => {
     if (!profile.portfolioId) { setSyncStatus('offline'); setSyncError('Save an onboarding plan before simulating the market.'); return false }
     profileRevision.current++
     setSyncStatus('syncing')
     setSyncError(null)
     try {
-      const remotePortfolio = await simulateMarket(profile.portfolioId)
+      const remotePortfolio = await simulateMarket(profile.portfolioId, changes)
       setProfileState((current) => ({ ...current, ...remotePortfolio, hasSimulatedMarket: true }))
       setSyncStatus('synced')
       setSyncError(null)

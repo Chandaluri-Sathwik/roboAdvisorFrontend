@@ -1,5 +1,5 @@
 import { normalizeAllocation, type Allocation, type LegacyAllocation, type RiskProfile } from '../data/demo'
-import type { FundClassAnalysis, InvestmentOptions, MarketDataContext, PlanProfile, ProjectionScenario } from '../types/plan'
+import type { FundClassAnalysis, InvestmentOptions, MarketChanges, MarketDataContext, PlanProfile, ProjectionScenario } from '../types/plan'
 import { ApiError, apiRequest } from './apiClient'
 
 type UserResponse = { id: string; email: string; display_name: string }
@@ -165,10 +165,10 @@ function goalLabel(goalType: string): string {
   return labels[goalType] || 'Investment goal'
 }
 
-export async function simulateMarket(portfolioId: string): Promise<RemotePortfolioState> {
+export async function simulateMarket(portfolioId: string, changes: MarketChanges): Promise<RemotePortfolioState> {
   const portfolio = await apiRequest<PortfolioResponse>(`/portfolios/${portfolioId}/simulate-market`, {
     method: 'POST',
-    body: JSON.stringify({ changes: { equity: 0.22, debt: -0.03, commodity: 0.04 } }),
+    body: JSON.stringify({ changes }),
   })
   return { actualAllocation: normalizeAllocation(portfolio.actual_allocation), portfolioValue: portfolio.current_value }
 }
