@@ -178,7 +178,23 @@ function splitTableRow(line: string): string[] {
   return line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((cell) => cell.trim())
 }
 
+function removeUnmatchedMarkers(value: string): string {
+  let result = value
+  for (const marker of ["**", "__", "~~"]) {
+    const count = result.split(marker).length - 1
+    if (count % 2 === 1) {
+      const lastIndex = result.lastIndexOf(marker)
+      result = result.slice(0, lastIndex) + result.slice(lastIndex + marker.length)
+    }
+  }
+  return result
+}
+
 function renderInline(text: string): ReactNode[] {
+  // If a model response is interrupted, an unmatched opening Markdown marker
+  // should not be shown literally (e.g. "**10-year"). This only cleans display;
+  // the backend separately rejects incomplete Gemini output.
+  text = removeUnmatchedMarkers(text)
   const tokenPattern = /(\[[^\]]+\]\(https?:\/\/[^\s)]+\)|\*\*[^*]+\*\*|__[^_]+__|~~[^~]+~~|`[^`]+`|\*(?!\s)[^*]+?\*|_(?!\s)[^_]+?_)/g
   const output: ReactNode[] = []
   let lastIndex = 0
